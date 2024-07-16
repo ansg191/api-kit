@@ -3,13 +3,13 @@ use serde::Serialize;
 use crate::{auth::AuthScheme, error::IntoHttpError, url::construct_url};
 
 #[derive(Debug, Clone, Default)]
-pub struct Metadata {
+pub struct Metadata<'a> {
     pub method: http::Method,
-    pub auth: &'static [&'static dyn AuthScheme],
-    pub path: &'static str,
+    pub auth: &'a [&'a dyn AuthScheme],
+    pub path: &'a str,
 }
 
-impl Metadata {
+impl Metadata<'_> {
     fn make_url(
         &self,
         base_url: &str,
@@ -22,24 +22,24 @@ impl Metadata {
 }
 
 #[derive(Debug, Clone)]
-pub struct VersionHistory<V: Version> {
+pub struct VersionHistory<'a, V: Version> {
     /// A list of unstable endpoints.
     ///
     /// For endpoint querying purposes, the last item is used.
-    pub unstable_paths: &'static [Metadata],
+    pub unstable_paths: &'a [Metadata<'a>],
     /// A list of metadata versions, mapped to the version they were introduced in.
-    pub stable_paths: &'static [(V, Metadata)],
+    pub stable_paths: &'a [(V, Metadata<'a>)],
     /// The version the endpoint was deprecated in, if any.
     pub deprecated: Option<V>,
     /// The version the endpoint was removed in, if any.
     pub removed: Option<V>,
 }
 
-impl<V: Version> VersionHistory<V> {
+impl<'a, V: Version> VersionHistory<'a, V> {
     /// Creates a new [`VersionHistory`].
     pub const fn new(
-        unstable_paths: &'static [Metadata],
-        stable_paths: &'static [(V, Metadata)],
+        unstable_paths: &'a [Metadata<'a>],
+        stable_paths: &'a [(V, Metadata<'a>)],
         deprecated: Option<V>,
         removed: Option<V>,
     ) -> Self {
@@ -118,7 +118,7 @@ impl<V: Version> VersionHistory<V> {
     /// [`versioning_decision_for`](VersionHistory::versioning_decision_for) to see if this endpoint
     /// is still available.
     #[must_use]
-    pub fn stable_endpoint_for(&self, versions: &[V]) -> Option<&'static Metadata> {
+    pub fn stable_endpoint_for(&self, versions: &[V]) -> Option<&Metadata> {
         // Go reverse to check the "latest" version first.
         for (ver, meta) in self.stable_paths.iter().rev() {
             // Check if any of the versions are equal or greater than the version the path needs.
@@ -152,29 +152,29 @@ impl<V: Version> VersionHistory<V> {
 
     /// Picks the last unstable metadata if it exists.
     #[must_use]
-    pub fn unstable(&self) -> Option<&'static Metadata> {
+    pub const fn unstable(&self) -> Option<&Metadata> {
         self.unstable_paths.last()
     }
 
     /// Returns all metadata variants
-    pub fn all_paths(&self) -> impl Iterator<Item = &'static Metadata> + '_ {
+    pub fn all_paths(&self) -> impl Iterator<Item = &Metadata> + '_ {
         self.unstable_paths()
             .chain(self.stable_paths().map(|(_, meta)| meta))
     }
 
     /// Returns all unstable path variants in canon form.
-    pub fn unstable_paths(&self) -> impl Iterator<Item = &'static Metadata> {
+    pub fn unstable_paths(&self) -> impl Iterator<Item = &Metadata> {
         self.unstable_paths.iter()
     }
 
     /// Returns all stable path variants in canon form, with a corresponding version.
-    pub fn stable_paths(&self) -> impl Iterator<Item = (&V, &'static Metadata)> {
+    pub fn stable_paths(&self) -> impl Iterator<Item = (&V, &Metadata)> {
         self.stable_paths
             .iter()
             .map(|(version, data)| (version, data))
     }
 
-    fn select_endpoint(&self, versions: &[V]) -> Result<&'static Metadata, IntoHttpError> {
+    fn select_endpoint(&self, versions: &[V]) -> Result<&Metadata, IntoHttpError> {
         match self.versioning_decision_for(versions) {
             VersioningDecision::Unstable => self.unstable().ok_or(IntoHttpError::NoUnstablePath),
             VersioningDecision::Stable { .. } => Ok(self

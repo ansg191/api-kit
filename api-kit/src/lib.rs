@@ -26,7 +26,7 @@ pub trait Endpoint: Sized {
     type Error: EndpointError;
 
     /// A history of this endpoint.
-    const HISTORY: VersionHistory<Self::Version>;
+    const HISTORY: VersionHistory<'static, Self::Version>;
 }
 
 /// An incoming request.
