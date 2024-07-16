@@ -1,0 +1,7 @@
+/target
+Cargo.lock
+
+.idea/
+
+.vale.ini
+.vale-styles
