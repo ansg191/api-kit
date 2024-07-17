@@ -325,27 +325,6 @@ macro_rules! history {
     ( @opt_version $version:expr ) => { Some($version) };
 }
 
-const HISTORY: VersionHistory<i32> = history! {
-    i32,
-    @unstable => {
-        method: GET,
-        auth: [crate::auth::bearer::BearerAuth],
-        path: "/v1alpha1/endpoint",
-    },
-    1 => {
-        method: GET,
-        auth: [crate::auth::bearer::BearerAuth],
-        path: "/v1/endpoint",
-    },
-    2 => {
-        method: GET,
-        auth: [crate::auth::bearer::BearerAuth],
-        path: "/v2/endpoint",
-    },
-    2 => deprecated,
-    3 => removed,
-};
-
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
 pub enum VersioningDecision {
     /// The unstable endpoint should be used.
@@ -412,6 +391,7 @@ mod tests {
     }
 
     #[test]
+    #[allow(clippy::too_many_lines)]
     fn versioning_decision_stable() {
         let history = history! {
             i32,

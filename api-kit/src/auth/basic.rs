@@ -24,8 +24,8 @@ impl Authenticator for BasicAuth {
         req: &mut Request<BytesMut>,
         data: Self::AuthData,
     ) -> Result<(), IntoHttpError> {
-        let auth = STANDARD.encode(&format!("{}:{}", data.username, data.password));
-        let header_val = HeaderValue::from_str(&format!("Basic {}", auth))?;
+        let auth = STANDARD.encode(format!("{}:{}", data.username, data.password));
+        let header_val = HeaderValue::from_str(&format!("Basic {auth}"))?;
 
         let headers = req.headers_mut();
         headers.insert(AUTHORIZATION, header_val);
@@ -41,7 +41,9 @@ pub struct BasicAuthData {
 }
 
 impl BasicAuthData {
-    pub fn new(username: String, password: String) -> Self {
+    #[inline]
+    #[must_use]
+    pub const fn new(username: String, password: String) -> Self {
         Self { username, password }
     }
 }

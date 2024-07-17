@@ -25,7 +25,7 @@ impl Authenticator for BearerAuth {
         let headers = req.headers_mut();
         headers.insert(
             AUTHORIZATION,
-            HeaderValue::from_str(&format!("Bearer {}", token))?,
+            HeaderValue::from_str(&format!("Bearer {token}"))?,
         );
         Ok(())
     }
