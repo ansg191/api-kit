@@ -1,3 +1,5 @@
+//! Basic authentication scheme.
+
 use base64::{engine::general_purpose::STANDARD, Engine};
 use bytes::BytesMut;
 use http::{header::AUTHORIZATION, HeaderValue, Request};
@@ -7,6 +9,11 @@ use crate::{
     error::IntoHttpError,
 };
 
+/// Basic authentication scheme.
+///
+/// This authenticator adds a [`Basic`] authentication header to the request.
+///
+/// [`Basic`]: https://datatracker.ietf.org/doc/html/rfc7617
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Default)]
 pub struct BasicAuth;
 
@@ -34,6 +41,9 @@ impl Authenticator for BasicAuth {
     }
 }
 
+/// Basic authentication data.
+///
+/// This data (username and password) is required for basic authentication.
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct BasicAuthData {
     pub username: String,

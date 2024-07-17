@@ -1,32 +1,37 @@
-#[derive(Debug, thiserror::Error)]
+use displaydoc::Display;
+use thiserror::Error;
+
+#[derive(Debug, Display, Error)]
 #[non_exhaustive]
 pub enum IntoHttpError {
-    #[error("endpoint was not supported by versions, but no unstable fallback path was defined")]
+    /// Endpoint wasn't supported by versions, but no unstable fallback path was defined.
     NoUnstablePath,
-    #[error("endpoint was removed")]
+    /// Endpoint was removed.
     EndpointRemoved,
-    #[error("missing authorization")]
+    /// Missing authorization.
     MissingAuth,
-    #[error("JSON error: {0}")]
+    /// JSON serialization error: {0}
     Json(#[from] serde_json::Error),
-    #[error("url error: {0}")]
+    /// URL serialization error: {0}
     Url(#[from] UrlError),
-    #[error("query error: {0}")]
+    /// Query serialization error: {0}
     Query(#[from] serde_urlencoded::ser::Error),
-    #[error("header error: {0}")]
+    /// Invalid header value
     Header(#[from] http::header::InvalidHeaderValue),
-    #[error("http construction failed: {0}")]
+    /// HTTP construction failed: {0}
     Http(#[from] http::Error),
 }
 
-#[derive(Debug, thiserror::Error)]
+#[derive(Debug, Display, Error)]
 #[non_exhaustive]
 pub enum FromHttpRequestError {
-    #[error("deserialize error: {0}")]
+    /// Deserialization error: {0}
     Deserialize(DeserializeError),
-    #[error("method mismatch: expected {expected:?}, got {actual:?}")]
+    /// Method mismatch.
     MethodMismatch {
+        /// Expected method.
         expected: http::Method,
+        /// Actual received method.
         actual: http::Method,
     },
 }
@@ -40,7 +45,7 @@ where
     }
 }
 
-#[derive(Debug, thiserror::Error)]
+#[derive(Debug, Error)]
 #[non_exhaustive]
 pub enum FromHttpResponseError<E> {
     #[error("deserialize error: {0}")]
@@ -58,32 +63,32 @@ where
     }
 }
 
-#[derive(Debug, thiserror::Error)]
+#[derive(Debug, Display, Error)]
 #[non_exhaustive]
 pub enum DeserializeError {
-    #[error(transparent)]
+    /// Error parsing JSON
     Json(#[from] serde_json::Error),
-    #[error(transparent)]
+    /// Error parsing query string: {0}
     Uri(#[from] serde_urlencoded::de::Error),
-    #[error(transparent)]
+    /// Error converting header to string
     Header(#[from] http::header::ToStrError),
-    #[error("missing header: {0}")]
+    /// Missing header: {0}
     MissingHeader(http::HeaderName),
 }
 
-#[derive(Debug, PartialEq, Eq, thiserror::Error)]
+#[derive(Debug, Display, PartialEq, Eq, Error)]
 pub enum UrlError {
-    #[error("{0}")]
+    /// Generic error message: {0}
     Message(String),
-    #[error("Top level serializer only supports structs")]
+    /// Top level serializer only supports structs
     TopLevel,
-    #[error("Invalid endpoint")]
+    /// Invalid endpoint
     InvalidEndpoint,
-    #[error("Value not supported")]
+    /// Value not supported
     ValueNotSupported,
-    #[error("Key not found: {0}")]
+    /// Key not found: {0}
     KeyNotFound(&'static str),
-    #[error("Unfilled field: {0}")]
+    /// Unfilled field: {0}
     UnfilledField(String),
 }
 
