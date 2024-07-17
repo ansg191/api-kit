@@ -11,6 +11,7 @@ pub enum IntoHttpError {
     /// Missing authorization.
     MissingAuth,
     /// JSON serialization error: {0}
+    #[cfg(feature = "json")]
     Json(#[from] serde_json::Error),
     /// URL serialization error: {0}
     Url(#[from] UrlError),
@@ -67,6 +68,7 @@ where
 #[non_exhaustive]
 pub enum DeserializeError {
     /// Error parsing JSON
+    #[cfg(feature = "json")]
     Json(#[from] serde_json::Error),
     /// Error parsing query string: {0}
     Uri(#[from] serde_urlencoded::de::Error),
