@@ -1,3 +1,4 @@
+use http::{HeaderName, HeaderValue, Uri};
 use serde::Serialize;
 
 use crate::{auth::AuthScheme, error::IntoHttpError, url::construct_url};
@@ -7,17 +8,28 @@ pub struct Metadata<'a> {
     pub method: http::Method,
     pub auth: &'a [&'a dyn AuthScheme],
     pub path: &'a str,
+    pub headers: &'a [(HeaderName, HeaderValue)],
 }
 
 impl Metadata<'_> {
-    fn make_url(
+    pub fn make_url(
         &self,
         base_url: &str,
         path_args: &impl Serialize,
         query_string: &impl Serialize,
-    ) -> Result<String, IntoHttpError> {
+    ) -> Result<Uri, IntoHttpError> {
         let base_url = base_url.strip_suffix('/').unwrap_or(base_url);
-        construct_url(base_url, self.path, path_args, query_string)
+        Ok(Uri::try_from(construct_url(
+            base_url,
+            self.path,
+            path_args,
+            query_string,
+        )?)?)
+    }
+
+    pub fn contains_auth(&self, scheme: &impl AuthScheme) -> bool {
+        let scheme_str = scheme.scheme();
+        self.auth.iter().any(|auth| auth.scheme() == scheme_str)
     }
 }
 
@@ -70,7 +82,7 @@ impl<'a, V: Version> VersionHistory<'a, V> {
         base_url: &str,
         path_args: &impl Serialize,
         query_string: &impl Serialize,
-    ) -> Result<String, IntoHttpError> {
+    ) -> Result<Uri, IntoHttpError> {
         self.select_endpoint(versions)?
             .make_url(base_url, path_args, query_string)
     }
@@ -174,7 +186,7 @@ impl<'a, V: Version> VersionHistory<'a, V> {
             .map(|(version, data)| (version, data))
     }
 
-    fn select_endpoint(&self, versions: &[V]) -> Result<&Metadata, IntoHttpError> {
+    pub fn select_endpoint(&self, versions: &[V]) -> Result<&Metadata, IntoHttpError> {
         match self.versioning_decision_for(versions) {
             VersioningDecision::Unstable => self.unstable().ok_or(IntoHttpError::NoUnstablePath),
             VersioningDecision::Stable { .. } => Ok(self

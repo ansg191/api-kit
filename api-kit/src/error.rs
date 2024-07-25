@@ -19,6 +19,8 @@ pub enum IntoHttpError {
     Query(#[from] serde_urlencoded::ser::Error),
     /// Invalid header value
     Header(#[from] http::header::InvalidHeaderValue),
+    /// Invalid URI
+    InvalidUri(#[from] http::uri::InvalidUri),
     /// HTTP construction failed: {0}
     Http(#[from] http::Error),
 }
