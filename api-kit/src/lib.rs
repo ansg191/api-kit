@@ -6,7 +6,7 @@ pub use http;
 use crate::{
     auth::Authenticator,
     error::{FromHttpRequestError, FromHttpResponseError, IntoHttpError},
-    metadata::{Version, VersionHistory},
+    metadata::Metadata,
 };
 
 pub mod auth;
@@ -17,16 +17,13 @@ mod url;
 /// An API endpoint.
 ///
 /// This is the base trait for all API endpoints.
-/// It defines the type of the versioning,
-/// the type of all errors, and a history of the endpoint per version.
+/// It defines the type of all errors and endpoint metadata.
 pub trait Endpoint: Sized {
-    /// The type representation of a version.
-    type Version: Version;
     /// The error type returned by this endpoint.
     type Error: EndpointError;
 
-    /// A history of this endpoint.
-    const HISTORY: VersionHistory<'static, Self::Version>;
+    /// A metadata of this endpoint.
+    const METADATA: Metadata<'static>;
 }
 
 /// An incoming request.
@@ -71,7 +68,7 @@ pub trait OutgoingRequest: Endpoint + Clone {
         self,
         base_url: &str,
         auth: A,
-        considering_versions: &[Self::Version],
+        auth_data: A::AuthData,
     ) -> Result<http::Request<BytesMut>, IntoHttpError>
     where
         A: Authenticator;

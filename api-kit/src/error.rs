@@ -4,10 +4,6 @@ use thiserror::Error;
 #[derive(Debug, Display, Error)]
 #[non_exhaustive]
 pub enum IntoHttpError {
-    /// Endpoint wasn't supported by versions, but no unstable fallback path was defined.
-    NoUnstablePath,
-    /// Endpoint was removed.
-    EndpointRemoved,
     /// Missing authorization.
     MissingAuth,
     /// JSON serialization error: {0}
